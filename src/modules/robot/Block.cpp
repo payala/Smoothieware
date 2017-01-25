@@ -39,6 +39,8 @@ Block::Block()
 
 void Block::clear()
 {
+    is_ready            = false;
+
     this->steps.fill(0);
 
     steps_event_count   = 0;
@@ -55,9 +57,10 @@ void Block::clear()
     recalculate_flag    = false;
     nominal_length_flag = false;
     max_entry_speed     = 0.0F;
-    is_ready            = false;
     is_ticking          = false;
+    is_g123             = false;
     locked              = false;
+    s_value             = 0.0F;
 
     acceleration_per_tick= 0;
     deceleration_per_tick= 0;
@@ -327,4 +330,12 @@ void Block::prepare()
         this->tick_info[m].deceleration_change= -STEPTICKER_TOFP(this->deceleration_per_tick * aratio);
         this->tick_info[m].plateau_rate= STEPTICKER_TOFP((this->maximum_rate * aratio) / STEP_TICKER_FREQUENCY);
     }
+}
+
+// returns current rate (steps/sec) for the given actuator
+float Block::get_trapezoid_rate(int i) const
+{
+    // convert steps per tick from fixed point to float and convert to steps/sec
+    // FIXME steps_per_tick can change at any time, potential race condition if it changes while being read here
+    return STEPTICKER_FROMFP(tick_info[i].steps_per_tick) * STEP_TICKER_FREQUENCY;
 }
